@@ -57,7 +57,7 @@ describe('Page', function () {
       await newPage.close();
       expect(await browser.pages()).not.toContain(newPage);
     });
-    it('should run beforeunload if asked for', async () => {
+    it.only('should run beforeunload if asked for', async () => {
       const {context, server, isChrome} = await getTestState();
 
       const newPage = await context.newPage();

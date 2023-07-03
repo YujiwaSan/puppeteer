@@ -86,6 +86,7 @@ import {
   isString,
   pageBindingInitString,
   releaseObject,
+  validateDialogType,
   valueFromRemoteObject,
   waitForEvent,
   waitWithTimeout,
@@ -830,22 +831,10 @@ export class CDPPage extends Page {
   }
 
   #onDialog(event: Protocol.Page.JavascriptDialogOpeningEvent): void {
-    let dialogType = null;
-    const validDialogTypes = new Set<Protocol.Page.DialogType>([
-      'alert',
-      'confirm',
-      'prompt',
-      'beforeunload',
-    ]);
-
-    if (validDialogTypes.has(event.type)) {
-      dialogType = event.type as Protocol.Page.DialogType;
-    }
-    assert(dialogType, 'Unknown javascript dialog type: ' + event.type);
-
+    const type = validateDialogType(event.type);
     const dialog = new Dialog(
       this.#client,
-      dialogType,
+      type,
       event.message,
       event.defaultPrompt
     );

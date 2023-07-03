@@ -84,9 +84,7 @@ export class BrowserContext extends BrowserContextBase {
     event: Bidi.BrowsingContext.ContextDestroyedEvent['params']
   ) {
     const page = this.#pages.get(event.context);
-    await page?.close().catch(error => {
-      debugError(error);
-    });
+    await page?.dispose();
     this.#pages.delete(event.context);
   }
 
