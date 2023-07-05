@@ -1140,12 +1140,6 @@
     "expectations": ["SKIP"]
   },
   {
-    "testIdPattern": "[page.spec] Page Page.close should *not* run beforeunload by default",
-    "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["chrome", "webDriverBiDi"],
-    "expectations": ["PASS"]
-  },
-  {
     "testIdPattern": "[page.spec] Page Page.close should reject all promises when page is closed",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["webDriverBiDi"],

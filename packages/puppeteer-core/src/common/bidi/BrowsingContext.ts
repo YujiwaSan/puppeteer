@@ -6,7 +6,7 @@ import {assert} from '../../util/assert.js';
 import {Deferred} from '../../util/Deferred.js';
 import type {CDPSession, Connection as CDPConnection} from '../Connection.js';
 import {ProtocolError, TimeoutError} from '../Errors.js';
-import {EventEmitter} from '../EventEmitter.js';
+import {EventEmitter, Handler} from '../EventEmitter.js';
 import {PuppeteerLifeCycleEvent} from '../LifecycleWatcher.js';
 import {TimeoutSettings} from '../TimeoutSettings.js';
 import {getPageContent, setPageContent, waitWithTimeout} from '../util.js';
@@ -92,6 +92,11 @@ export class BrowsingContext extends Realm {
   #id: string;
   #url: string;
   #cdpSession: CDPSession;
+  #subscribedEvents = new Map<string, Handler<any>>([
+    ['browsingContext.domContentLoaded', this.#onUrlChange.bind(this)],
+    ['browsingContext.load', this.#onUrlChange.bind(this)],
+    ['browsingContext.fragmentNavigated', this.#onUrlChange.bind(this)],
+  ]) as Map<Bidi.Message.EventNames, Handler>;
 
   constructor(
     connection: Connection,
@@ -105,12 +110,13 @@ export class BrowsingContext extends Realm {
     this.#url = info.url;
     this.#cdpSession = new CDPSessionWrapper(this);
 
-    this.on(
-      'browsingContext.fragmentNavigated',
-      (info: Bidi.BrowsingContext.NavigationInfo) => {
-        this.#url = info.url;
-      }
-    );
+    for (const [event, subscriber] of this.#subscribedEvents) {
+      this.on(event, subscriber);
+    }
+  }
+
+  #onUrlChange(info: Bidi.BrowsingContext.NavigationInfo) {
+    this.#url = info.url;
   }
 
   createSandboxRealm(sandbox: string): Realm {

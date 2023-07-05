@@ -145,7 +145,8 @@ export const setupTestBrowserHooks = (): void => {
           timeout: this.timeout() - 1_000,
         });
       }
-    } catch {
+    } catch (error) {
+      console.error(error);
       // Intentionally empty as `getTestState` will throw
       // if browser is not found
     }

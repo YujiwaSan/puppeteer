@@ -221,6 +221,8 @@ export class Frame extends BaseFrame {
     ) as string;
 
     const [info] = await Promise.all([
+      // TODO(lightning00blade): Should also keep tack of
+      // navigationAborted and navigationFailed
       waitForEvent<Bidi.BrowsingContext.NavigationInfo>(
         this.#context,
         waitUntilEvent,
@@ -232,7 +234,7 @@ export class Frame extends BaseFrame {
       ),
       waitForEvent(
         this.#context,
-        Bidi.BrowsingContext.EventNames.FragmentNavigated,
+        Bidi.BrowsingContext.EventNames.NavigationStartedEvent,
         () => {
           return true;
         },

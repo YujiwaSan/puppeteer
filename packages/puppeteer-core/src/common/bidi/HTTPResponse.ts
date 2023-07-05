@@ -59,7 +59,9 @@ export class HTTPResponse extends BaseHTTPResponse {
 
     // TODO: Removed once the Firefox implementation is compliant with https://w3c.github.io/webdriver-bidi/#get-the-response-data.
     for (const header of response.headers || []) {
-      this.#headers[header.name] = header.value ?? '';
+      if ('value' in header) {
+        this.#headers[header.name.toLowerCase()] = header.value;
+      }
     }
   }
 

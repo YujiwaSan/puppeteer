@@ -86,7 +86,7 @@ class CDPConnectionAdapter {
       throw new Error('Unknown CDP session with id' + id);
     }
     if (!this.#adapters.has(session)) {
-      const adapter = new CDPClientAdapter(session);
+      const adapter = new CDPClientAdapter(session, id, this.#browser);
       this.#adapters.set(session, adapter);
       return adapter;
     }
@@ -113,11 +113,23 @@ class CDPClientAdapter<T extends EventEmitter & Pick<CDPPPtrConnection, 'send'>>
 {
   #closed = false;
   #client: T;
+  sessionId: string | undefined = undefined;
+  #browserClient?: BidiMapper.CdpClient;
 
-  constructor(client: T) {
+  constructor(
+    client: T,
+    sessionId?: string,
+    browserClient?: BidiMapper.CdpClient
+  ) {
     super();
     this.#client = client;
+    this.sessionId = sessionId;
+    this.#browserClient = browserClient;
     this.#client.on('*', this.#forwardMessage as Handler<any>);
+  }
+
+  browserClient(): BidiMapper.CdpClient {
+    return this.#browserClient!;
   }
 
   #forwardMessage = <T extends keyof CdpEvents>(

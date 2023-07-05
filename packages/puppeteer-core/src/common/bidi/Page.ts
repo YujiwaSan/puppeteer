@@ -83,6 +83,7 @@ export class Page extends PageBase {
     ],
     ['browsingContext.contextCreated', this.#onFrameAttached.bind(this)],
     ['browsingContext.contextDestroyed', this.#onFrameDetached.bind(this)],
+    ['browsingContext.navigationStarted', this.#onFrameNavigated.bind(this)],
     ['browsingContext.fragmentNavigated', this.#onFrameNavigated.bind(this)],
   ]) as Map<Bidi.Session.SubscriptionRequestEvent, Handler>;
   #networkManagerEvents = new Map<symbol, Handler<any>>([
@@ -236,7 +237,9 @@ export class Page extends PageBase {
         info.parent
       );
       this.#frameTree.addFrame(frame);
-      this.emit(PageEmittedEvents.FrameAttached, frame);
+      if (frame !== this.mainFrame()) {
+        this.emit(PageEmittedEvents.FrameAttached, frame);
+      }
     }
   }
 
