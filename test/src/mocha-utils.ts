@@ -447,7 +447,7 @@ const closeLaunched = (storage: Array<() => Promise<void>>) => {
 };
 
 export const launch = async (
-  launchOptions: PuppeteerLaunchOptions,
+  launchOptions: Readonly<PuppeteerLaunchOptions>,
   options: {
     after?: 'each' | 'all';
     createContext?: boolean;

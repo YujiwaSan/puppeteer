@@ -26,29 +26,6 @@ import {BrowsingContext} from './BrowsingContext.js';
 const debugProtocolSend = debug('puppeteer:webDriverBiDi:SEND ►');
 const debugProtocolReceive = debug('puppeteer:webDriverBiDi:RECV ◀');
 
-type Capability = {
-  // session.CapabilityRequest = {
-  //   ? acceptInsecureCerts: bool,
-  //   ? browserName: text,
-  //   ? browserVersion: text,
-  //   ? platformName: text,
-  //   ? proxy: {
-  //     ? proxyType: "pac" / "direct" / "autodetect" / "system" / "manual",
-  //     ? proxyAutoconfigUrl: text,
-  //     ? ftpProxy: text,
-  //     ? httpProxy: text,
-  //     ? noProxy: [*text],
-  //     ? sslProxy: text,
-  //     ? socksProxy: text,
-  //     ? socksVersion: 0..255,
-  //   },
-  //   Extensible
-  // };
-  acceptInsecureCerts?: boolean;
-  browserName?: string;
-  browserVersion?: string;
-};
-
 /**
  * @internal
  */
@@ -59,11 +36,11 @@ interface Commands {
   };
   'script.callFunction': {
     params: Bidi.Script.CallFunctionParameters;
-    returnType: Bidi.Script.CallFunctionResult;
+    returnType: Bidi.Script.EvaluateResult;
   };
   'script.disown': {
     params: Bidi.Script.DisownParameters;
-    returnType: Bidi.Script.DisownResult;
+    returnType: Bidi.EmptyResult;
   };
   'script.addPreloadScript': {
     params: Bidi.Script.AddPreloadScriptParameters;
@@ -76,7 +53,7 @@ interface Commands {
   };
   'browsingContext.close': {
     params: Bidi.BrowsingContext.CloseParameters;
-    returnType: Bidi.Message.EmptyResult;
+    returnType: Bidi.EmptyResult;
   };
   'browsingContext.getTree': {
     params: Bidi.BrowsingContext.GetTreeParameters;
@@ -88,7 +65,7 @@ interface Commands {
   };
   'browsingContext.reload': {
     params: Bidi.BrowsingContext.ReloadParameters;
-    returnType: Bidi.Message.EmptyResult;
+    returnType: Bidi.EmptyResult;
   };
   'browsingContext.print': {
     params: Bidi.BrowsingContext.PrintParameters;
@@ -101,27 +78,16 @@ interface Commands {
 
   'input.performActions': {
     params: Bidi.Input.PerformActionsParameters;
-    returnType: Bidi.Message.EmptyResult;
+    returnType: Bidi.EmptyResult;
   };
   'input.releaseActions': {
     params: Bidi.Input.ReleaseActionsParameters;
-    returnType: Bidi.Message.EmptyResult;
+    returnType: Bidi.EmptyResult;
   };
 
   'session.new': {
-    params: {
-      // capabilities: session.CapabilitiesRequest
-      capabilities?: {
-        // session.CapabilitiesRequest = {
-        //   ? alwaysMatch: session.CapabilityRequest,
-        //   ? firstMatch: [*session.CapabilityRequest]
-        // }
-        alwaysMatch?: Capability;
-      };
-    }; // TODO: Update Types in chromium bidi
-    returnType: {
-      result: {sessionId: string; capabilities: Capability};
-    };
+    params: Bidi.Session.NewParameters;
+    returnType: Bidi.Session.NewResult;
   };
   'session.status': {
     params: object;
@@ -129,18 +95,18 @@ interface Commands {
   };
   'session.subscribe': {
     params: Bidi.Session.SubscriptionRequest;
-    returnType: Bidi.Message.EmptyResult;
+    returnType: Bidi.EmptyResult;
   };
   'session.unsubscribe': {
     params: Bidi.Session.SubscriptionRequest;
-    returnType: Bidi.Message.EmptyResult;
+    returnType: Bidi.EmptyResult;
   };
   'cdp.sendCommand': {
-    params: Bidi.Cdp.SendCommandParams;
+    params: Bidi.Cdp.SendCommandParameters;
     returnType: Bidi.Cdp.SendCommandResult;
   };
   'cdp.getSession': {
-    params: Bidi.Cdp.GetSessionParams;
+    params: Bidi.Cdp.GetSessionParameters;
     returnType: Bidi.Cdp.GetSessionResult;
   };
 }
@@ -184,16 +150,16 @@ export class Connection extends EventEmitter {
   send<T extends keyof Commands>(
     method: T,
     params: Commands[T]['params']
-  ): Promise<Commands[T]['returnType']> {
+  ): Promise<{result: Commands[T]['returnType']}> {
     return this.#callbacks.create(method, this.#timeout, id => {
       const stringifiedMessage = JSON.stringify({
         id,
         method,
         params,
-      } as Bidi.Message.CommandRequest);
+      } as Bidi.Command);
       debugProtocolSend(stringifiedMessage);
       this.#transport.send(stringifiedMessage);
-    }) as Promise<Commands[T]['returnType']>;
+    }) as Promise<{result: Commands[T]['returnType']}>;
   }
 
   /**
@@ -206,9 +172,7 @@ export class Connection extends EventEmitter {
       });
     }
     debugProtocolReceive(message);
-    const object = JSON.parse(message) as
-      | Bidi.Message.CommandResponse
-      | Bidi.Message.EventMessage;
+    const object = JSON.parse(message) as Bidi.ChromiumBidi.Message;
 
     if ('id' in object) {
       if ('error' in object) {
@@ -221,12 +185,16 @@ export class Connection extends EventEmitter {
         this.#callbacks.resolve(object.id, object);
       }
     } else {
-      this.#maybeEmitOnContext(object);
-      this.emit(object.method, object.params);
+      if ('error' in object) {
+        // TODO:
+      } else if (!('launched' in object)) {
+        this.#maybeEmitOnContext(object);
+        this.emit(object.method, object.params);
+      }
     }
   }
 
-  #maybeEmitOnContext(event: Bidi.Message.EventMessage) {
+  #maybeEmitOnContext(event: Bidi.ChromiumBidi.Event) {
     let context: BrowsingContext | undefined;
     // Context specific events
     if ('context' in event.params && event.params.context) {
@@ -275,7 +243,7 @@ export class Connection extends EventEmitter {
 /**
  * @internal
  */
-function createProtocolError(object: Bidi.Message.ErrorResult): string {
+function createProtocolError(object: Bidi.ErrorResponse): string {
   let message = `${object.error} ${object.message}`;
   if (object.stacktrace) {
     message += ` ${object.stacktrace}`;
@@ -283,8 +251,6 @@ function createProtocolError(object: Bidi.Message.ErrorResult): string {
   return message;
 }
 
-function isCDPEvent(
-  event: Bidi.Message.EventMessage
-): event is Bidi.Cdp.EventReceivedEvent {
+function isCDPEvent(event: Bidi.ChromiumBidi.Event): event is Bidi.Cdp.Event {
   return event.method.startsWith('cdp.');
 }

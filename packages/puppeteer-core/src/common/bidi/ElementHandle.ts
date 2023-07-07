@@ -39,7 +39,7 @@ export class ElementHandle<
 
   constructor(
     realm: Realm,
-    remoteValue: Bidi.CommonDataTypes.RemoteValue,
+    remoteValue: Bidi.Script.RemoteValue,
     frame: Frame
   ) {
     super(new JSHandle(realm, remoteValue));
@@ -58,7 +58,7 @@ export class ElementHandle<
     return this.handle.isPrimitiveValue;
   }
 
-  remoteValue(): Bidi.CommonDataTypes.RemoteValue {
+  remoteValue(): Bidi.Script.RemoteValue {
     return this.handle.remoteValue();
   }
 
@@ -87,7 +87,7 @@ export class ElementHandle<
       Object.assign({}, options, {
         origin: {
           type: 'element' as const,
-          element: remoteValue as Bidi.CommonDataTypes.SharedReference,
+          element: remoteValue as Bidi.Script.SharedReference,
         },
       })
     );
@@ -100,7 +100,7 @@ export class ElementHandle<
     return this.#frame.page().mouse.move(0, 0, {
       origin: {
         type: 'element' as const,
-        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
+        element: remoteValue as Bidi.Script.SharedReference,
       },
     });
   }
@@ -112,7 +112,7 @@ export class ElementHandle<
     return this.#frame.page().touchscreen.tap(0, 0, {
       origin: {
         type: 'element' as const,
-        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
+        element: remoteValue as Bidi.Script.SharedReference,
       },
     });
   }
@@ -124,7 +124,7 @@ export class ElementHandle<
     return this.#frame.page().touchscreen.touchStart(0, 0, {
       origin: {
         type: 'element' as const,
-        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
+        element: remoteValue as Bidi.Script.SharedReference,
       },
     });
   }
@@ -136,7 +136,7 @@ export class ElementHandle<
     return this.#frame.page().touchscreen.touchMove(0, 0, {
       origin: {
         type: 'element' as const,
-        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
+        element: remoteValue as Bidi.Script.SharedReference,
       },
     });
   }

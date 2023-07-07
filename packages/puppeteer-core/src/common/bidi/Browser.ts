@@ -36,7 +36,8 @@ import {debugError} from './utils.js';
  * @internal
  */
 export class Browser extends BrowserBase {
-  static readonly subscribeModules: Bidi.Session.SubscriptionRequestEvent[] = [
+  // TODO: Update generator to include fully module
+  static readonly subscribeModules: string[] = [
     'browsingContext',
     'network',
     'log',

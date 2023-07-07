@@ -85,7 +85,7 @@ export class Page extends PageBase {
     ['browsingContext.contextDestroyed', this.#onFrameDetached.bind(this)],
     ['browsingContext.navigationStarted', this.#onFrameNavigated.bind(this)],
     ['browsingContext.fragmentNavigated', this.#onFrameNavigated.bind(this)],
-  ]) as Map<Bidi.Session.SubscriptionRequestEvent, Handler>;
+  ]) as Map<Bidi.Event['method'], Handler>;
   #networkManagerEvents = new Map<symbol, Handler<any>>([
     [
       NetworkManagerEmittedEvents.Request,
@@ -252,6 +252,21 @@ export class Page extends PageBase {
     // Detach all child frames first.
     if (frame) {
       frame = await this.#frameTree.waitForFrame(frameId);
+      // TODO: Investigate if a navigationCompleted event should be in Spec
+      await waitForEvent(
+        this.#connection,
+        'browsingContext.domContentLoaded',
+        (event: Bidi.BrowsingContext.DomContentLoaded['params']) => {
+          if (event.context === frame?._id) {
+            return true;
+          }
+          return false;
+        },
+        0,
+        new Promise(() => {})
+        // this.#closedDeferred.valueOrThrow()
+      );
+
       this.emit(PageEmittedEvents.FrameNavigated, frame);
     }
   }
@@ -277,7 +292,7 @@ export class Page extends PageBase {
     this.emit(PageEmittedEvents.FrameDetached, frame);
   }
 
-  #onLogEntryAdded(event: Bidi.Log.LogEntry): void {
+  #onLogEntryAdded(event: Bidi.Log.Entry): void {
     const frame = this.frame(event.source.context);
     if (!frame) {
       return;
@@ -638,13 +653,13 @@ export class Page extends PageBase {
 }
 
 function isConsoleLogEntry(
-  event: Bidi.Log.LogEntry
+  event: Bidi.Log.Entry
 ): event is Bidi.Log.ConsoleLogEntry {
   return event.type === 'console';
 }
 
 function isJavaScriptLogEntry(
-  event: Bidi.Log.LogEntry
+  event: Bidi.Log.Entry
 ): event is Bidi.Log.JavascriptLogEntry {
   return event.type === 'javascript';
 }

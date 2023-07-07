@@ -81,7 +81,7 @@ export class BrowserContext extends BrowserContextBase {
   }
 
   async #onContextDestroyed(
-    event: Bidi.BrowsingContext.ContextDestroyedEvent['params']
+    event: Bidi.BrowsingContext.ContextDestroyed['params']
   ) {
     const page = this.#pages.get(event.context);
     await page?.close().catch(error => {
@@ -94,7 +94,7 @@ export class BrowserContext extends BrowserContextBase {
     await this.#init.valueOrThrow();
 
     const {result} = await this.#connection.send('browsingContext.create', {
-      type: 'tab',
+      type: Bidi.BrowsingContext.CreateType.Tab,
     });
     const page = new Page(this, {
       context: result.context,

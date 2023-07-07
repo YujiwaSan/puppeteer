@@ -234,7 +234,7 @@ export class Frame extends BaseFrame {
       ),
       waitForEvent(
         this.#context,
-        Bidi.BrowsingContext.EventNames.NavigationStartedEvent,
+        Bidi.ChromiumBidi.BrowsingContext.EventNames.NavigationStarted,
         () => {
           return true;
         },

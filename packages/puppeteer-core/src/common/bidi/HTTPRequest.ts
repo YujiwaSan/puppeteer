@@ -41,7 +41,7 @@ export class HTTPRequest extends BaseHTTPRequest {
   #frame: Frame | null;
 
   constructor(
-    event: Bidi.Network.BeforeRequestSentParams,
+    event: Bidi.Network.BeforeRequestSentParameters,
     frame: Frame | null,
     redirectChain: HTTPRequest[]
   ) {
@@ -61,8 +61,8 @@ export class HTTPRequest extends BaseHTTPRequest {
     for (const header of event.request.headers) {
       // TODO: How to handle Binary Headers
       // https://w3c.github.io/webdriver-bidi/#type-network-Header
-      if ('value' in header) {
-        this.#headers[header.name.toLowerCase()] = header.value;
+      if (header.value.type === 'string') {
+        this.#headers[header.name.toLowerCase()] = header.value.value;
       }
     }
   }

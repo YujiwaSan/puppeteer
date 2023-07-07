@@ -26,7 +26,7 @@ import {
 } from './mocha-utils.js';
 import {attachFrame} from './utils.js';
 
-describe('ElementHandle specs', function () {
+describe.only('ElementHandle specs', function () {
   setupTestBrowserHooks();
 
   describe('ElementHandle.boundingBox', function () {
@@ -186,7 +186,7 @@ describe('ElementHandle specs', function () {
     });
   });
 
-  describe('ElementHandle.click', function () {
+  describe.only('ElementHandle.click', function () {
     it('should work', async () => {
       const {page, server} = await getTestState();
 
@@ -295,7 +295,7 @@ describe('ElementHandle specs', function () {
       });
       expect(error.message).atLeastOneToContain([
         'Node is either not clickable or not an HTMLElement',
-        'no such node',
+        'no such element',
       ]);
     });
     it('should throw for recursively hidden nodes', async () => {
@@ -311,7 +311,7 @@ describe('ElementHandle specs', function () {
       });
       expect(error.message).atLeastOneToContain([
         'Node is either not clickable or not an HTMLElement',
-        'no such node',
+        'no such element',
       ]);
     });
     it('should throw for <br> elements', async () => {

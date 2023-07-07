@@ -32,8 +32,8 @@ const lifeCycleToReadinessState = new Map<
   PuppeteerLifeCycleEvent,
   Bidi.BrowsingContext.ReadinessState
 >([
-  ['load', 'complete'],
-  ['domcontentloaded', 'interactive'],
+  ['load', Bidi.BrowsingContext.ReadinessState.Complete],
+  ['domcontentloaded', Bidi.BrowsingContext.ReadinessState.Interactive],
 ]);
 
 /**
@@ -66,7 +66,7 @@ export class CDPSessionWrapper extends EventEmitter implements CDPSession {
     ...paramArgs: ProtocolMapping.Commands[T]['paramsType']
   ): Promise<ProtocolMapping.Commands[T]['returnType']> {
     const session = await this.#sessionId.valueOrThrow();
-    const result = await this.#context.connection.send('cdp.sendCommand', {
+    const {result} = await this.#context.connection.send('cdp.sendCommand', {
       method: method,
       params: paramArgs[0],
       session,
@@ -92,11 +92,11 @@ export class BrowsingContext extends Realm {
   #id: string;
   #url: string;
   #cdpSession: CDPSession;
-  #subscribedEvents = new Map<string, Handler<any>>([
+  #subscribedEvents = new Map<Bidi.Event['method'], Handler<any>>([
     ['browsingContext.domContentLoaded', this.#onUrlChange.bind(this)],
     ['browsingContext.load', this.#onUrlChange.bind(this)],
     ['browsingContext.fragmentNavigated', this.#onUrlChange.bind(this)],
-  ]) as Map<Bidi.Message.EventNames, Handler>;
+  ]);
 
   constructor(
     connection: Connection,

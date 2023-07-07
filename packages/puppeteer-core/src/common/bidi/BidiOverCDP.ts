@@ -86,7 +86,11 @@ class CDPConnectionAdapter {
       throw new Error('Unknown CDP session with id' + id);
     }
     if (!this.#adapters.has(session)) {
-      const adapter = new CDPClientAdapter(session, id, this.#browser);
+      const adapter = new CDPClientAdapter(
+        session,
+        id,
+        this.#browser as unknown as BidiMapper.CdpClient
+      );
       this.#adapters.set(session, adapter);
       return adapter;
     }
@@ -175,32 +179,27 @@ class NoOpTransport
   extends BidiMapper.EventEmitter<any>
   implements BidiMapper.BidiTransport
 {
-  #onMessage: (
-    message: Bidi.Message.RawCommandRequest
-  ) => Promise<void> | void = async (
-    _m: Bidi.Message.RawCommandRequest
-  ): Promise<void> => {
-    return;
-  };
+  #onMessage: (message: Bidi.ChromiumBidi.Command) => Promise<void> | void =
+    async (_m: Bidi.ChromiumBidi.Command): Promise<void> => {
+      return;
+    };
 
-  emitMessage(message: Bidi.Message.RawCommandRequest) {
+  emitMessage(message: Bidi.ChromiumBidi.Command) {
     void this.#onMessage(message);
   }
 
   setOnMessage(
-    onMessage: (message: Bidi.Message.RawCommandRequest) => Promise<void> | void
+    onMessage: (message: Bidi.ChromiumBidi.Command) => Promise<void> | void
   ): void {
     this.#onMessage = onMessage;
   }
 
-  async sendMessage(message: Bidi.Message.OutgoingMessage): Promise<void> {
+  async sendMessage(message: Bidi.ChromiumBidi.Message): Promise<void> {
     this.emit('bidiResponse', message);
   }
 
   close() {
-    this.#onMessage = async (
-      _m: Bidi.Message.RawCommandRequest
-    ): Promise<void> => {
+    this.#onMessage = async (_m: Bidi.ChromiumBidi.Command): Promise<void> => {
       return;
     };
   }
