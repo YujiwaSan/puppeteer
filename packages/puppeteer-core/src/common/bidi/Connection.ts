@@ -174,7 +174,7 @@ export class Connection extends EventEmitter {
     debugProtocolReceive(message);
     const object = JSON.parse(message) as Bidi.ChromiumBidi.Message;
 
-    if ('id' in object) {
+    if ('id' in object && object.id) {
       if ('error' in object) {
         this.#callbacks.reject(
           object.id,
@@ -185,7 +185,7 @@ export class Connection extends EventEmitter {
         this.#callbacks.resolve(object.id, object);
       }
     } else {
-      if ('error' in object) {
+      if ('error' in object || 'id' in object) {
         // TODO:
       } else if (!('launched' in object)) {
         this.#maybeEmitOnContext(object);

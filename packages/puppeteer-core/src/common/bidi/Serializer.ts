@@ -189,25 +189,36 @@ export class BidiSerializer {
   static deserializeLocalValue(result: Bidi.Script.RemoteValue): unknown {
     switch (result.type) {
       case 'array':
-        return result.value?.map(value => {
-          return BidiSerializer.deserializeLocalValue(value);
-        });
+        if (result.value) {
+          return result.value.map(value => {
+            return BidiSerializer.deserializeLocalValue(value);
+          });
+        }
+        break;
       case 'set':
-        return result.value?.reduce((acc: Set<unknown>, value) => {
-          return acc.add(BidiSerializer.deserializeLocalValue(value));
-        }, new Set());
+        if (result.value) {
+          return result.value.reduce((acc: Set<unknown>, value) => {
+            return acc.add(BidiSerializer.deserializeLocalValue(value));
+          }, new Set());
+        }
+        break;
       case 'object':
-        return result.value?.reduce((acc: Record<any, unknown>, tuple) => {
-          const {key, value} = BidiSerializer.deserializeTuple(tuple);
-          acc[key as any] = value;
-          return acc;
-        }, {});
-
+        if (result.value) {
+          return result.value.reduce((acc: Record<any, unknown>, tuple) => {
+            const {key, value} = BidiSerializer.deserializeTuple(tuple);
+            acc[key as any] = value;
+            return acc;
+          }, {});
+        }
+        break;
       case 'map':
-        return result.value?.reduce((acc: Map<unknown, unknown>, tuple) => {
-          const {key, value} = BidiSerializer.deserializeTuple(tuple);
-          return acc.set(key, value);
-        }, new Map());
+        if (result.value) {
+          return result.value?.reduce((acc: Map<unknown, unknown>, tuple) => {
+            const {key, value} = BidiSerializer.deserializeTuple(tuple);
+            return acc.set(key, value);
+          }, new Map());
+        }
+        break;
       case 'promise':
         return {};
       case 'regexp':

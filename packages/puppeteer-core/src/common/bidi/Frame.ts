@@ -232,15 +232,26 @@ export class Frame extends BaseFrame {
         timeout,
         this.#abortDeferred.valueOrThrow()
       ),
-      waitForEvent(
-        this.#context,
-        Bidi.ChromiumBidi.BrowsingContext.EventNames.NavigationStarted,
-        () => {
-          return true;
-        },
-        timeout,
-        this.#abortDeferred.valueOrThrow()
-      ),
+      Deferred.race([
+        waitForEvent(
+          this.#context,
+          Bidi.ChromiumBidi.BrowsingContext.EventNames.NavigationStarted,
+          () => {
+            return true;
+          },
+          timeout,
+          this.#abortDeferred.valueOrThrow()
+        ),
+        waitForEvent(
+          this.#context,
+          Bidi.ChromiumBidi.BrowsingContext.EventNames.FragmentNavigated,
+          () => {
+            return true;
+          },
+          timeout,
+          this.#abortDeferred.valueOrThrow()
+        ),
+      ]),
     ]);
 
     return this.#page.getNavigationResponse(info.navigation);

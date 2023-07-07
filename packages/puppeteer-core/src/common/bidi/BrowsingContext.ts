@@ -93,10 +93,11 @@ export class BrowsingContext extends Realm {
   #url: string;
   #cdpSession: CDPSession;
   #subscribedEvents = new Map<Bidi.Event['method'], Handler<any>>([
-    ['browsingContext.domContentLoaded', this.#onUrlChange.bind(this)],
+    ['browsingContext.domContentLoaded', this.#onDomContentLoaded.bind(this)],
     ['browsingContext.load', this.#onUrlChange.bind(this)],
     ['browsingContext.fragmentNavigated', this.#onUrlChange.bind(this)],
   ]);
+  _loaded = false;
 
   constructor(
     connection: Connection,
@@ -113,6 +114,12 @@ export class BrowsingContext extends Realm {
     for (const [event, subscriber] of this.#subscribedEvents) {
       this.on(event, subscriber);
     }
+  }
+
+  #onDomContentLoaded(event: Bidi.BrowsingContext.DomContentLoaded['params']) {
+    this._loaded = true;
+
+    this.#onUrlChange(event);
   }
 
   #onUrlChange(info: Bidi.BrowsingContext.NavigationInfo) {

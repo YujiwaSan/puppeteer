@@ -26,7 +26,7 @@ import {
 } from './mocha-utils.js';
 import {attachFrame} from './utils.js';
 
-describe.only('ElementHandle specs', function () {
+describe('ElementHandle specs', function () {
   setupTestBrowserHooks();
 
   describe('ElementHandle.boundingBox', function () {
@@ -186,7 +186,7 @@ describe.only('ElementHandle specs', function () {
     });
   });
 
-  describe.only('ElementHandle.click', function () {
+  describe('ElementHandle.click', function () {
     it('should work', async () => {
       const {page, server} = await getTestState();
 

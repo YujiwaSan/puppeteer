@@ -253,19 +253,21 @@ export class Page extends PageBase {
     if (frame) {
       frame = await this.#frameTree.waitForFrame(frameId);
       // TODO: Investigate if a navigationCompleted event should be in Spec
-      await waitForEvent(
-        this.#connection,
-        'browsingContext.domContentLoaded',
-        (event: Bidi.BrowsingContext.DomContentLoaded['params']) => {
-          if (event.context === frame?._id) {
-            return true;
-          }
-          return false;
-        },
-        0,
-        new Promise(() => {})
-        // this.#closedDeferred.valueOrThrow()
-      );
+      if (!frame.context()._loaded) {
+        await waitForEvent(
+          this.#connection,
+          'browsingContext.domContentLoaded',
+          (event: Bidi.BrowsingContext.DomContentLoaded['params']) => {
+            if (event.context === frame?._id) {
+              return true;
+            }
+            return false;
+          },
+          0,
+          new Promise(() => {})
+          // this.#closedDeferred.valueOrThrow()
+        );
+      }
 
       this.emit(PageEmittedEvents.FrameNavigated, frame);
     }
